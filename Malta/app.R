@@ -1,7 +1,8 @@
 library(shiny)
 library(leaflet)
-
+library(shinythemes)
 ui <- fluidPage(
+  theme = shinytheme("readable"),
   titlePanel("Map of Malta and Island State Information"),
   tabsetPanel(
     tabPanel("Map", leafletOutput("map")),
@@ -46,7 +47,7 @@ ui <- fluidPage(
              )
     ),
     
-    tabPanel("Description", 
+    tabPanel("Narrative Description", 
              fluidRow(
                column(12, 
                       wellPanel(
