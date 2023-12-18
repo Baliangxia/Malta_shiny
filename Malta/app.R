@@ -1,9 +1,22 @@
 library(shiny)
 library(leaflet)
 library(shinythemes)
+library(highcharter)
+
 ui <- fluidPage(
   theme = shinytheme("readable"),
   titlePanel("Map of Malta and Island State Information"),
+  
+  tags$style(
+    HTML(
+      "
+      body {
+        background-color: #e6f7ff; /* Light blue */
+      }
+      "
+    )
+  ),
+  
   tabsetPanel(
     tabPanel("Map", leafletOutput("map")),
     tabPanel("Key Facts", 
@@ -51,7 +64,7 @@ ui <- fluidPage(
              fluidRow(
                column(12, 
                       wellPanel(
-                        tags$h4("About Malta"),
+                        tags$h4("About Malta", class= "text-center"),
                         tags$p("Malta is a small but historically rich island republic in the midst of the Mediterranean Sea."),
                         tags$p("Malta, with its intriguing blend of Maltese and English as official languages, has embraced its place as a cultural crossroads."),
                         tags$p("Malta, a nation with the Euro as its currency, has a strong legacy on display in its UNESCO World legacy site, Valletta."),
@@ -61,6 +74,7 @@ ui <- fluidPage(
                       )
                )
              )
+             
     ),
     tabPanel("Key Demographics", 
              fluidRow(
@@ -91,7 +105,7 @@ ui <- fluidPage(
                column(6, 
                       wellPanel(
                         tags$h4("Employment"),
-                        tags$p("Unemployment Rate: 4.4% (2022)")
+                        tags$p("Unemployment Rate: 4.1% (2022)")
                       )
                )
              )
@@ -100,10 +114,19 @@ ui <- fluidPage(
     tabPanel("Comparison", 
              fluidRow(
                column(12, 
-                      highchartOutput("comparisonChart")
+                      wellPanel(
+                        selectInput("comparison_metric", "Select Metric", 
+                                    choices = c("Population", "Area", "Life Expectancy", "Unemployment Rate"),
+                                    selected = "Population"),
+                        highchartOutput("comparisonChart"),
+                        plotOutput("areaPlot"),
+                        plotOutput("lifeExpectancyPlot"),
+                        plotOutput("UnemploymentRatePlot")
+                      )
                )
              )
     ),
+    
     tabPanel("SWOT Analysis", 
              fluidRow(
                column(6, 
@@ -135,7 +158,7 @@ ui <- fluidPage(
                       )
                )
              )
-                               ),
+    ),
     tabPanel("Citations",
              fluidRow(
                column(12, 
@@ -145,8 +168,8 @@ ui <- fluidPage(
                         tags$p("2. Finances: World Bank Data"),
                         tags$p("3. Island State Information: Wikipedia"),
                         tags$p("4. Others: Chatgpt")
-                        )
                       )
+               )
              )
     )
   )
@@ -181,15 +204,20 @@ server <- function(input, output, session) {
   })
   
   output$comparisonChart <- renderHighchart({
+    metric_data <- switch(input$comparison_metric,
+                          "Population" = c(0.514, 1.21, 5, 0.63),
+                          "Area" = c(316, 9251, 25700, 8336),
+                          "Life Expectancy" = c(80.7, 81.8, 82.3, 82.6),
+                          "Unemployment Rate" = c(4.1, 7.1, 8.1, 6.5))
+    
     highchart() %>%
       hc_chart(type = "bar") %>%
-      hc_title(text = "Comparison with Other Island States") %>%
+      hc_title(text = paste("Comparison with Other Island States -", input$comparison_metric)) %>%
       hc_xAxis(categories = c("Malta", "Cyprus", "Sicily", "Crete")) %>%
-      hc_yAxis(title = list(text = "Population (millions)")) %>%
-      hc_series(
-        list(name = "Population", data = c(0.514, 1.18, 5, 0.63))
-      )
+      hc_yAxis(title = list(text = input$comparison_metric)) %>%
+      hc_series(list(name = input$comparison_metric, data = metric_data))
   })
 }
-
 shinyApp(ui, server)
+
+# rsconnect::deployApp('Malta')
